@@ -8,87 +8,46 @@ import {
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
-import { LayoutGrid, Check, User, Table2 } from "lucide-react"
-import * as Popover from "@radix-ui/react-popover"
+import { User, Table2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
-// Filter options component
-function FilterOptions({ onFilterChange, selectedFilters }: { onFilterChange: (filters: string[]) => void, selectedFilters: string[] }) {
-  const filterOptions = ["High", "Medium", "Low", "Assigned", "Unassigned"]
-  
-  const toggleFilter = (filter: string) => {
-    if (selectedFilters.includes(filter)) {
-      onFilterChange(selectedFilters.filter(f => f !== filter))
-    } else {
-      onFilterChange([...selectedFilters, filter])
-    }
-  }
-  
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="platform-card p-3 shadow-lg min-w-[200px]"
-    >
-      <div className="flex flex-col">
-        <div className="px-3 py-2 border-b border-gray-100 mb-2">
-          <p className="text-sm font-medium text-gray-900">Filters</p>
-        </div>
-        <div className="flex flex-col gap-1">
-          {filterOptions.map((filter) => {
-            const isSelected = selectedFilters.includes(filter)
-            return (
-              <motion.button
-                key={filter}
-                onClick={() => toggleFilter(filter)}
-                whileHover={{ x: 2 }}
-                className={cn(
-                  "flex gap-2 items-center px-3 py-2 rounded-lg text-left smooth-transition",
-                  isSelected 
-                    ? "bg-gray-50 border border-gray-200" 
-                    : "hover:bg-gray-50"
-                )}
-              >
-                {isSelected ? (
-                  <Check className="w-4 h-4 text-[#3B82F6]" />
-                ) : (
-                  <div className="w-4 h-4 border border-gray-300 rounded" />
-                )}
-                <p className="text-sm font-medium text-gray-700">{filter}</p>
-              </motion.button>
-            )
-          })}
-        </div>
-      </div>
-    </motion.div>
-  )
+// Bubble data type
+type BubbleData = {
+  x: number
+  y: number
+  size: number
+  value: string
+  color: string
+  label: string
+  id: string
+  icon?: boolean
 }
 
 // Different bubble data sets based on view options
-const bubbleDataSets = {
+const bubbleDataSets: Record<string, BubbleData[]> = {
   edit: [
-    { x: 15, y: 10, size: 16, value: "5k", color: "from-purple-500 to-purple-600", label: "5k", id: "edit-1" },
-    { x: 35, y: 10, size: 20, value: "12k", color: "from-red-500 to-red-600", label: "12k", id: "edit-2" },
-    { x: 55, y: 50, size: 24, value: "47.6k", color: "from-orange-500 to-orange-600", label: "47.6k", id: "edit-3" },
-    { x: 75, y: 15, size: 32, value: "121.6k", color: "from-yellow-500 to-orange-500", label: "121.6k", id: "edit-4" },
+    { x: 15, y: 10, size: 16, value: "5k", color: "from-purple-500 to-purple-600", label: "5k", id: "edit-1", icon: false },
+    { x: 35, y: 10, size: 20, value: "12k", color: "from-red-500 to-red-600", label: "12k", id: "edit-2", icon: false },
+    { x: 55, y: 50, size: 24, value: "47.6k", color: "from-orange-500 to-orange-600", label: "47.6k", id: "edit-3", icon: false },
+    { x: 75, y: 15, size: 32, value: "121.6k", color: "from-yellow-500 to-orange-500", label: "121.6k", id: "edit-4", icon: false },
     { x: 25, y: 30, size: 14, value: "6.5k", color: "from-gray-400 to-gray-500", label: "6,5k", icon: true, id: "edit-5" },
-    { x: 45, y: 12, size: 12, value: "4.8k", color: "from-red-400 to-red-500", label: "4.8k", id: "edit-6" },
+    { x: 45, y: 12, size: 12, value: "4.8k", color: "from-red-400 to-red-500", label: "4.8k", id: "edit-6", icon: false },
   ],
   provider: [
-    { x: 20, y: 25, size: 18, value: "8.2k", color: "from-blue-500 to-blue-600", label: "8.2k", id: "provider-1" },
-    { x: 40, y: 45, size: 22, value: "15.5k", color: "from-indigo-500 to-indigo-600", label: "15.5k", id: "provider-2" },
-    { x: 60, y: 30, size: 26, value: "28k", color: "from-purple-500 to-purple-600", label: "28k", id: "provider-3" },
-    { x: 80, y: 20, size: 30, value: "65k", color: "from-pink-500 to-pink-600", label: "65k", id: "provider-4" },
-    { x: 30, y: 55, size: 16, value: "9k", color: "from-cyan-400 to-cyan-500", label: "9k", id: "provider-5" },
-    { x: 50, y: 35, size: 20, value: "18k", color: "from-blue-400 to-blue-500", label: "18k", id: "provider-6" },
+    { x: 20, y: 25, size: 18, value: "8.2k", color: "from-blue-500 to-blue-600", label: "8.2k", id: "provider-1", icon: false },
+    { x: 40, y: 45, size: 22, value: "15.5k", color: "from-indigo-500 to-indigo-600", label: "15.5k", id: "provider-2", icon: false },
+    { x: 60, y: 30, size: 26, value: "28k", color: "from-purple-500 to-purple-600", label: "28k", id: "provider-3", icon: false },
+    { x: 80, y: 20, size: 30, value: "65k", color: "from-pink-500 to-pink-600", label: "65k", id: "provider-4", icon: false },
+    { x: 30, y: 55, size: 16, value: "9k", color: "from-cyan-400 to-cyan-500", label: "9k", id: "provider-5", icon: false },
+    { x: 50, y: 35, size: 20, value: "18k", color: "from-blue-400 to-blue-500", label: "18k", id: "provider-6", icon: false },
   ],
   procedure: [
-    { x: 25, y: 15, size: 20, value: "12k", color: "from-green-500 to-green-600", label: "12k", id: "proc-1" },
-    { x: 45, y: 40, size: 24, value: "22k", color: "from-emerald-500 to-emerald-600", label: "22k", id: "proc-2" },
-    { x: 65, y: 25, size: 28, value: "35k", color: "from-teal-500 to-teal-600", label: "35k", id: "proc-3" },
-    { x: 35, y: 60, size: 18, value: "14k", color: "from-lime-500 to-lime-600", label: "14k", id: "proc-4" },
-    { x: 55, y: 50, size: 22, value: "19k", color: "from-green-400 to-green-500", label: "19k", id: "proc-5" },
-    { x: 75, y: 35, size: 26, value: "42k", color: "from-emerald-400 to-emerald-500", label: "42k", id: "proc-6" },
+    { x: 25, y: 15, size: 20, value: "12k", color: "from-green-500 to-green-600", label: "12k", id: "proc-1", icon: false },
+    { x: 45, y: 40, size: 24, value: "22k", color: "from-emerald-500 to-emerald-600", label: "22k", id: "proc-2", icon: false },
+    { x: 65, y: 25, size: 28, value: "35k", color: "from-teal-500 to-teal-600", label: "35k", id: "proc-3", icon: false },
+    { x: 35, y: 60, size: 18, value: "14k", color: "from-lime-500 to-lime-600", label: "14k", id: "proc-4", icon: false },
+    { x: 55, y: 50, size: 22, value: "19k", color: "from-green-400 to-green-500", label: "19k", id: "proc-5", icon: false },
+    { x: 75, y: 35, size: 26, value: "42k", color: "from-emerald-400 to-emerald-500", label: "42k", id: "proc-6", icon: false },
   ],
 }
 
@@ -110,8 +69,6 @@ const tableData = [
 
 export function ClaimGroups() {
   const [showTable, setShowTable] = useState(false)
-  const [showFilters, setShowFilters] = useState(false)
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([])
   const [viewOption, setViewOption] = useState<string>("edit")
   
   // Get bubble data based on view option
